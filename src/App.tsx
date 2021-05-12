@@ -43,7 +43,17 @@ const App = defineComponent({
                     console.log("capturing", err)
                 });
             } else {
-                alert("浏览器暂不支持")
+                // @ts-ignore
+                if (navigator.getUserMedia) { // Standard
+                    alert('getUserMedia')
+                    // @ts-ignore
+                } else if (navigator.webkitGetUserMedia) { // WebKit-prefixed引擎
+                    alert('webkitGetUserMedia')
+                }
+                // @ts-ignore
+                else if (navigator.mozGetUserMedia) { // Firefox-prefixed
+                    alert('mozGetUserMedia')
+                }
             }
         })
 
