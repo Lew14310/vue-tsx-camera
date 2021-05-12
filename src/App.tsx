@@ -50,7 +50,11 @@ const App = defineComponent({
 
         return () => (
             <div>
+<<<<<<< HEAD
 222
+=======
+
+>>>>>>> origin/master
                 <video autoplay></video>
             </div>
         )
