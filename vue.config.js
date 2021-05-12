@@ -1,9 +1,9 @@
 const webpack = require('webpack')
 
 module.exports = {
-    /* devServer: {
+     devServer: {
           https: true
-      },*/
+      },
     publicPath: './',
     productionSourceMap:false,
 
