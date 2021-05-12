@@ -53,6 +53,9 @@ const App = defineComponent({
                 // @ts-ignore
                 else if (navigator.mozGetUserMedia) { // Firefox-prefixed
                     alert('mozGetUserMedia')
+                    // @ts-ignore
+                }else if (navigator.msGetUserMedia){
+                    alert('msGetUserMedia')
                 }
             }
         })
