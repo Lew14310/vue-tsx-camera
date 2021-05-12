@@ -4,69 +4,59 @@ const App = defineComponent({
 
     setup() {
 
-        const data = reactive({
-            m: ''
-        })
 
-
-        const hasUserMedia = () => {
-            // @ts-ignore
-            return !!(navigator.getUserMedia || navigator.webkitGetUserMedia
-                // @ts-ignore
-                || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-        }
 
         onMounted(() => {
-            if (hasUserMedia()) {
-                /*
-                , function (stream) {//将视频流交给video
-                                    var video = document.querySelector("video");
-                                    //video.src=window.URL.createObjectURL(stream);
-                                    try {
-                                        // @ts-ignore
-                                        video.srcObject = stream;
-                                    } catch (error) {
-                                        // @ts-ignore
-                                        video.src = window.URL.createObjectURL(stream);
-                                    }
-                                }, function (err) {
-                                    alert('您拒绝摄像头权限')
-                                    console.log("capturing", err)
-                                });
-                            } else {
-                                // @ts-ignore
-                                if (navigator.getUserMedia) { // Standard
-                                    alert('getUserMedia')
-                                    // @ts-ignore
-                                } else if (navigator.webkitGetUserMedia) { // WebKit-prefixed引擎
-                                    alert('webkitGetUserMedia')
-                                }
-                                // @ts-ignore
-                                else if (navigator.mozGetUserMedia) { // Firefox-prefixed
-                                    alert('mozGetUserMedia')
-                                    // @ts-ignore
-                                }else if (navigator.msGetUserMedia){
-                                    alert('msGetUserMedia')
-                                }
-                            }
-                * */
-                const mediaDevices: MediaDevices = navigator.mediaDevices;
+            // 老的浏览器可能根本没有实现 mediaDevices，所以我们可以先设置一个空的对象
+            if (navigator.mediaDevices === undefined) {
+                // @ts-ignore
+                navigator.mediaDevices = {};
+            }
 
-                mediaDevices.getUserMedia({video: {facingMode: 'environment'}}).then((mediaStream)=>{
-                    var video = document.querySelector("video");
+// 一些浏览器部分支持 mediaDevices。我们不能直接给对象设置 getUserMedia
+// 因为这样可能会覆盖已有的属性。这里我们只会在没有getUserMedia属性的时候添加它。
+            if (navigator.mediaDevices.getUserMedia === undefined) {
+                navigator.mediaDevices.getUserMedia = function (constraints) {
 
-                    try {
+                    // 首先，如果有getUserMedia的话，就获得它
+                    // @ts-ignore
+                    var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+                    // 一些浏览器根本没实现它 - 那么就返回一个error到promise的reject来保持一个统一的接口
+                    if (!getUserMedia) {
+                        return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+                    }
+
+                    // 否则，为老的navigator.getUserMedia方法包裹一个Promise
+                    return new Promise(function (resolve, reject) {
+                        getUserMedia.call(navigator, constraints, resolve, reject);
+                    });
+                }
+            }
+
+            navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}})
+                .then(function (stream) {
+                    var video = document.querySelector('video');
+                    // 旧的浏览器可能没有srcObject
+                    // @ts-ignore
+                    if ("srcObject" in video) {
+                        video.srcObject = stream;
+                    } else {
+
+                        // 防止在新的浏览器里使用它，应为它已经不再支持了
                         // @ts-ignore
-                        video.src = window.URL.createObjectURL(mediaStream);
-
-                    } catch (error) {
-                        // @ts-ignore
-                        video.src = window.URL.createObjectURL(mediaStream);
+                        video.src = window.URL.createObjectURL(stream);
                     }
                     // @ts-ignore
-                    video.play();
+                    video.onloadedmetadata = function (e) {
+                        // @ts-ignore
+                        video.play();
+                    };
                 })
-            }
+                .catch(function (err) {
+                    console.log(err.name + ": " + err.message);
+                });
+
         })
 
 
